@@ -32,7 +32,7 @@ def df_to_xml(df, ts_header: XmlHeader, out_path=None):
             
 
 #TODO XmlTimeSeries ipv XmlSeries gebruiken?
-def xml_to_dict(xml_path, binary=False):
+def xml_to_dict(xml_path, binary:bool=False):
     """#TODO add timezone (assume UTC now)
     """
     if binary:
@@ -97,6 +97,22 @@ def xml_to_dict(xml_path, binary=False):
     return series
 
 
+def xml_to_df(xml_path, binary:bool, parameter:str):
+    """Turn dict of input binary to dataframe with every column another timeserie"""
+    xmldict = xml_to_dict(xml_path=xml_path, binary=binary)
+
+    print([xmldict[key].keys() for key in xmldict])
+
+    cols = [key for key in xmldict if parameter in xmldict[key].keys()]
+    time_df = pd.DataFrame(index = xmldict[cols[0]][parameter].df.index,
+                        columns=cols)
+
+    for col in cols:
+        missval = float(xmldict[col][parameter].metadata["missVal"])
+        time_df[col] = xmldict[col][parameter].df.replace(missval,np.nan)
+    return time_df
+
+
 def print_xml(timeseries):
     """helper function. Print header en tree gegevens van de timeseries."""
     for key in timeseries.keys():
@@ -112,55 +128,3 @@ def print_xml(timeseries):
     #                         piTimeSeriesXmlContent=pi_ts_xml)
     ## WERKT NIET WANT GEEN RECHTEN ##
 
-
-class DataFrameTimeseries:
-    """Dataframe should contain datetime indices with each column as a separate locationid
-    This class will turn a dataframe with timeseries into an xml. 
-    """
-    def __init__(self, df, out_path, 
-                 header_settings = {"module_instance_id":"",
-                                    "parameter_id":"",
-                                    "qualifier_ids":[],
-                                    "missing_val":-9999}):
-        
-        self.df = df
-        self.header_settings = header_settings
-        self.xml = XmlTimeSeries(out_path=out_path)
-
-
-    def _make_eventstr_base(self, pd_timeindex_serie):
-        """Create base event string with date and time and empty value
-        the value can be added later with string formatting"""
-        return f'\t\t<event date="{pd_timeindex_serie.strftime(f"%Y-%m-%d")}" time="{pd_timeindex_serie.strftime(f"%H:%M:%S")}" value="{"{}"}"/>\n'
-
-
-    def _get_header(self, location_id):
-        return XmlHeader(module_instance_id=self.header_settings["module_instance_id"],
-                        location_id=location_id,
-                        parameter_id=self.header_settings["parameter_id"],
-                        qualifier_ids=self.header_settings["qualifier_ids"],
-                        missing_val=self.header_settings["missing_val"],
-                        )
-    
-    def get_series_from_df(self):
-        """extract timeseries from df and add them to the xml timeseries."""
-        self.eventstr_base = "".join(pd.Series(self.df.index).apply(self._make_eventstr_base))
-
-        #Add each column as separate serie to df
-        for key, pd_serie in self.df.items():
-            ts_header = self._get_header(location_id = key)
-            
-            #Insert values into eventstring
-            eventstr = self.eventstr_base.format(*pd_serie.values)
-
-            #Add series to xml
-            self.xml.add_serie(header=ts_header, eventstr=eventstr)
-            
-
-    def write(self):
-        self.xml.write()
-
-    
-    def run(self):
-        self.get_series_from_df()
-        self.write()

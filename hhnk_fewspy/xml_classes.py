@@ -1,10 +1,21 @@
+# %%
 import pandas as pd
 import inspect
 import datetime
+from lxml import objectify
+import numpy as np
+import hhnk_research_tools as hrt
 
+
+# TODO toevoegen aan header (uit de event str halen):
+            # <timeStep unit="second" multiplier="900"/>
+			# <startDate date="2021-06-22" time="06:00:00"/>
+            # <endDate date="2021-06-22" time="07:00:00"/>
+#TODO XmlHeader.write uitfaseren
+#TODO metadata XmlSeries overnemen in XmlTimeSeries
+#TODO bij wegschrijven max x events en anders opsplitsen naar meerdere bestanden.
 
 class XmlHeader():
-
     """Init timeseries header. can be written to timeseries by supplying the pi_ts"""
     def __init__(self, module_instance_id,
                     location_id,
@@ -18,6 +29,7 @@ class XmlHeader():
         self.qualifier_ids = qualifier_ids
         self.parameter_id = parameter_id
         self.missing_val = missing_val
+
 
     def write(self, pi_ts):
         """write to hkvfewspy timeseries"""
@@ -50,6 +62,7 @@ f"""{tab*indent}<header>
 {tab*(indent+1)}<missVal>{self.missing_val}</missVal>
 {tab*indent}</header>"""
     
+
     def __repr__(self):
         return self.to_str(indent=0)
     
@@ -90,6 +103,7 @@ f"""\t<series>
 
 
 class XmlTimeSeries:
+    """#TODO XmlFile, rename??"""
     def __init__(self, out_path, tzone="0.0"):
         self.out_path = out_path
 
@@ -113,6 +127,7 @@ class XmlTimeSeries:
 
 
 #TODO where is this used?
+# Now used in xml_to_dict, but maybe we can use XmlTimeSeries
 class XmlSeries():
     def __init__(self, metadata, data, binary, columns=None):
         self.metadata = metadata
@@ -171,3 +186,162 @@ class XmlSeries():
 variables: {variables}"""
         return f"""xmlSeries locationId={self.metadata['locationId']}, parameterId={self.metadata['parameterId']}
 """
+
+
+class XmlFile(hrt.File):
+    """Mother of all classes. 
+    Can read xml to df and write back to file"""
+    def __init__(self, xml_path):
+        super().__init__(base=xml_path)
+
+
+    @property
+    def binfile_path(self):
+        binfile_path = self.pl.with_suffix(".bin")
+        if binfile_path.exists():
+            return binfile_path
+        else:
+            return None
+
+
+    # def to_df():
+
+
+    def to_dict(self):
+
+        #Check if there is a bin file
+        if self.binfile_path is None:
+            binary = False
+        else:
+            binary = True
+
+        
+        if binary:
+            bin_values = np.fromfile(
+                self.binfile_path,
+                dtype=np.float32,
+                offset=0,
+                count=-1,
+            )
+
+
+        #Read headers
+        xml_data = objectify.parse(self.base)  # Parse XML data
+        root = xml_data.getroot()  # Root element
+
+        series = {}
+
+        #Get children, filter out timezone.
+        rootchildren = [child for child in root.getchildren() if child.tag.endswith("series")]
+
+        #Loop over children (individual timeseries in the xml)
+        for i, child in enumerate(rootchildren):
+            subchildren = child.getchildren() #alle headers en en timevalues
+            metadata = None
+            data = []
+            columns = None
+            
+            for subchild in subchildren:
+
+                #Write header to dict
+                if subchild.tag.endswith("header"): #gewoonlijk eerste subchild is de header
+                    header_childs = subchild.getchildren()
+                    metadata = {}
+                    for item in header_childs:
+                        key = item.tag.split("}")[-1]
+
+                        item_keys = item.keys()
+                        
+                        if len(item_keys)==0:
+                            metadata[key] = item.text
+                        else:
+                            metadata[key] = {}
+                            for item_key, item_value in zip(item_keys, item.values()):
+                                metadata[key][item_key] = item_value
+                #Get data
+                else:
+                    data.append(subchild.values())
+
+                #If binary we assume equidistant series with equal length.
+                if binary:
+                    bin_size = int(len(bin_values)/len(rootchildren))
+                    data=bin_values[i*bin_size:i*bin_size+bin_size]
+
+            columns=subchild.keys()
+            serie = XmlSeries(metadata, data=data, columns=columns, binary=binary)
+
+            if serie.locid not in series.keys():
+                series[serie.locid] = {}
+            series[serie.locid][serie.paramid] = serie 
+
+        return series
+
+
+class DataFrameTimeseries():
+    def __init__(self):
+        """Dataframe should contain datetime indices with each column 
+        as a separate locationid. This class will turn a dataframe 
+        with timeseries into an xml. 
+        """
+        pass
+
+    def _make_eventstr_base(self, pd_timeindex_serie):
+        """Create base event string with date and time and empty value
+        the value can be added later with string formatting"""
+        return f'\t\t<event date="{pd_timeindex_serie.strftime(f"%Y-%m-%d")}" time="{pd_timeindex_serie.strftime(f"%H:%M:%S")}" value="{"{}"}"/>\n'
+
+
+    def _get_header(self, location_id):
+        return XmlHeader(module_instance_id=self.header_settings["module_instance_id"],
+                        location_id=location_id,
+                        parameter_id=self.header_settings["parameter_id"],
+                        qualifier_ids=self.header_settings["qualifier_ids"],
+                        missing_val=self.header_settings["missing_val"],
+                        )
+    
+    def get_series_from_df(self):
+        """extract timeseries from df and add them to the xml timeseries."""
+        self.eventstr_base = "".join(pd.Series(self.df.index).apply(self._make_eventstr_base))
+
+        #Add each column as separate serie to df
+        for key, pd_serie in self.df.items():
+            ts_header = self._get_header(location_id = key)
+            
+            #Insert values into eventstring
+            eventstr = self.eventstr_base.format(*pd_serie.values)
+
+            #Add series to xml
+            self.xml.add_serie(header=ts_header, eventstr=eventstr)
+            
+
+    def write(self):
+        self.xml.write()
+
+    
+    def run(self, 
+            df, 
+            out_path, 
+            header_settings = {"module_instance_id":"",
+                                "parameter_id":"",
+                                "qualifier_ids":[],
+                                "missing_val":-9999}
+    ):
+        self.df = df
+        self.header_settings = header_settings
+        self.xml = XmlTimeSeries(out_path=out_path)
+    
+
+        self.get_series_from_df()
+        self.write()
+
+
+
+
+# %%
+if __name__ == "__main__":
+    from pathlib import Path
+    self = XmlFile(Path(__file__).parents[1] / "tests_fewspy/data/bin_test_series.xml")
+    d=self.to_dict()
+    e = d["union_6750-98"]
+    f = e["H.meting"]
+
