@@ -5,7 +5,7 @@ import datetime
 from lxml import objectify
 import numpy as np
 import hhnk_research_tools as hrt
-
+from typing import Union
 
 # TODO toevoegen aan header (uit de event str halen):
             # <timeStep unit="second" multiplier="900"/>
@@ -15,20 +15,25 @@ import hhnk_research_tools as hrt
 #TODO metadata XmlSeries overnemen in XmlTimeSeries
 #TODO bij wegschrijven max x events en anders opsplitsen naar meerdere bestanden.
 
+#TODO bezig met XmlFile.read_to_dict. De serie.df moet ergens in kunnen landen.
+
 class XmlHeader():
     """Init timeseries header. can be written to timeseries by supplying the pi_ts"""
-    def __init__(self, module_instance_id,
-                    location_id,
-                    parameter_id,
-                    qualifier_ids=[],
-                    missing_val=-9999,
+    def __init__(self, module_instance_id: str = "",
+                    locationId: str = "",
+                    parameterId: str = "",
+                    qualifier_ids: list = [],
+                    timeStep: dict = {'unit': 'second', 'multiplier': '900'},
+                    missVal: Union[str,int,float] =-9999,
+                    **kwargs
                     ):
         
         self.module_instance_id = module_instance_id
-        self.location_id = location_id
+        self.location_id = locationId
+        self.parameter_id = parameterId
         self.qualifier_ids = qualifier_ids
-        self.parameter_id = parameter_id
-        self.missing_val = missing_val
+        self.timestep = timeStep
+        self.missing_val = missVal
 
 
     def write(self, pi_ts):
@@ -59,6 +64,7 @@ f"""{tab*indent}<header>
 {tab*(indent+1)}<moduleInstanceId>{self.module_instance_id}</moduleInstanceId>
 {tab*(indent+1)}<locationId>{self.location_id}</locationId>
 {tab*(indent+1)}<parameterId>{self.parameter_id}</parameterId>{self.qualifier_str}
+{tab*(indent+1)}<timeStep unit="{self.timestep['unit']}" multiplier="{self.timestep['multiplier']}"/>
 {tab*(indent+1)}<missVal>{self.missing_val}</missVal>
 {tab*indent}</header>"""
     
@@ -207,15 +213,15 @@ class XmlFile(hrt.File):
     # def to_df():
 
 
-    def to_dict(self):
-
+    def read_to_dict(self):
+        """"""
+        # %%
         #Check if there is a bin file
         if self.binfile_path is None:
             binary = False
         else:
             binary = True
 
-        
         if binary:
             bin_values = np.fromfile(
                 self.binfile_path,
@@ -268,12 +274,16 @@ class XmlFile(hrt.File):
                     data=bin_values[i*bin_size:i*bin_size+bin_size]
 
             columns=subchild.keys()
+
+            header = XmlHeader(**metadata)
             serie = XmlSeries(metadata, data=data, columns=columns, binary=binary)
 
             if serie.locid not in series.keys():
                 series[serie.locid] = {}
             series[serie.locid][serie.paramid] = serie 
 
+header
+# %%
         return series
 
 
@@ -341,7 +351,7 @@ class DataFrameTimeseries():
 if __name__ == "__main__":
     from pathlib import Path
     self = XmlFile(Path(__file__).parents[1] / "tests_fewspy/data/bin_test_series.xml")
-    d=self.to_dict()
+    d=self.read_to_dict()
     e = d["union_6750-98"]
     f = e["H.meting"]
 
