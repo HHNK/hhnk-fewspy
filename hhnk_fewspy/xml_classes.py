@@ -282,9 +282,9 @@ class XmlFile(hrt.File):
                 series[serie.locid] = {}
             series[serie.locid][serie.paramid] = serie 
 
-header
+
 # %%
-        return series
+        # return series
 
 
 class DataFrameTimeseries():
