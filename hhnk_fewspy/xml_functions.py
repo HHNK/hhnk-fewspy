@@ -1,3 +1,4 @@
+# %%
 from pathlib import Path
 
 import numpy as np
@@ -111,7 +112,7 @@ def xml_to_df(xml_path, binary: bool, parameter: str):
 
 
 def print_xml(timeseries):
-    """helper function. Print header en tree gegevens van de timeseries."""
+    """Helper function. Print header en tree gegevens van de timeseries."""
     for key in timeseries.keys():
         print(key)
         for key2 in timeseries[key]:
@@ -124,3 +125,11 @@ def print_xml(timeseries):
     # pi.putTimeSeriesForFilter(filterId='HHNK_OPP_WEB_SL',
     #                         piTimeSeriesXmlContent=pi_ts_xml)
     ## WERKT NIET WANT GEEN RECHTEN ##
+
+
+# %%
+
+if __name__ == "__main__":
+    from tests_fewspy.config import FOLDER_DATA
+
+    xml_to_df(xml_path=FOLDER_DATA.bin_test_series.base, binary=True, parameter="")
