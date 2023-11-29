@@ -1,5 +1,5 @@
 # %%
-from hhnk_fewspy.xml_classes import XmlHeader
+from hhnk_fewspy.xml_classes import XmlFile, XmlHeader
 
 
 def test_xml_header():
@@ -7,14 +7,9 @@ def test_xml_header():
     xml_header = XmlHeader(
         **{
             "type": "instantaneous",
-            "locationId": "union_5803-15",
-            "parameterId": "H.meting",
-            "timeStep": {"unit": "second", "multiplier": "900"},
-            "startDate": {"date": "2021-06-22", "time": "06:00:00"},
-            "endDate": {"date": "2021-06-22", "time": "07:00:00"},
-            "missVal": "-999.0",
-            "stationName": "union_5803-15",
-            "units": "m",
+            "location_id": "union_5803-15",
+            "parameter_id": "H.meting",
+            "miss_val": "-999.0",
         }
     )
 
@@ -22,5 +17,24 @@ def test_xml_header():
     assert xml_header.location_id == "union_5803-15"
 
 
+def test_xml_file_bin():
+    """Test if we can read binary xml file"""
+    xml_file = XmlFile.from_xml_file(r"data/bin_test_series.xml")
+
+    df = xml_file.to_df()
+    assert int(df.sum().sum()) == -337126
+
+
+def test_xml_file():
+    """Test if we can read normal xml file"""
+    xml_file = XmlFile.from_xml_file(r"data/normal_test_series.xml")
+
+    df = xml_file.to_df()
+    assert int(df.sum().sum()) == -11
+
+
+# %%
 if __name__ == "__main__":
     test_xml_header()
+
+# %%

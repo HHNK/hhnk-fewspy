@@ -6,7 +6,7 @@ import pandas as pd
 from lxml import objectify
 
 from hhnk_fewspy.api_functions import connect_API
-from hhnk_fewspy.xml_classes import XmlHeader, XmlSeries, XmlTimeSeries
+from hhnk_fewspy.xml_classes import XmlHeader, XmlTimeSeries
 
 
 # TODO xml classes gebruiken ipv connect_API
@@ -87,7 +87,7 @@ def xml_to_dict(xml_path, binary: bool = False):
                 data = bin_values[i * bin_size : i * bin_size + bin_size]
 
         columns = subchild.keys()
-        serie = XmlSeries(metadata, data=data, columns=columns, binary=binary)
+        serie = XmlTimeSeries(metadata, data=data, columns=columns, binary=binary)
 
         if serie.locid not in series.keys():
             series[serie.locid] = {}

@@ -252,7 +252,9 @@ class XmlTimeSeries:
             unit_factor = 3600
         else:
             raise NotImplementedError(f"Timestep unit [{self.header.time_step['unit']}]")
-        return (self.end - self.start).total_seconds() / unit_factor / int(self.header.time_step["multiplier"]) + 1
+        return int(
+            (self.end - self.start).total_seconds() / unit_factor / int(self.header.time_step["multiplier"]) + 1
+        )
 
     @property
     def timeseries_index(self) -> pd.DatetimeIndex:
@@ -323,6 +325,7 @@ value="{"{}"}"/>\n'
                 df.set_index(pd.to_datetime(df[0] + "T" + df[1]), inplace=True)
                 df.drop([0, 1], axis=1, inplace=True)
                 df.rename({2: "value"}, axis=1, inplace=True)
+                df["value"] = df["value"].astype(float)
             self._df = df
         return self._df
 
@@ -487,7 +490,7 @@ class DataFrameTimeseries:
         """Create base event string with date and time and empty value
         the value can be added later with string formatting
         """
-        return f'\t\t<event date="{pd_timeindex_serie.strftime(f"%Y-%m-%d")}" time="{pd_timeindex_serie.strftime(f"%H:%M:%S")}" value="{"{}"}"/>\n'
+        return f'\t\t<event date="{pd_timeindex_serie.strftime("%Y-%m-%d")}" time="{pd_timeindex_serie.strftime("%H:%M:%S")}" value="{"{}"}"/>\n'
 
     def _get_header(self, location_id):
         return XmlHeader(
@@ -507,7 +510,7 @@ class DataFrameTimeseries:
             ts_header = self._get_header(location_id=key)
 
             # Insert values into eventstring
-            eventstr = self.eventstr_base.format(*pd_serie.values)
+            eventstr = self.eventstr_base.format(*pd_serie.to_numpy())
 
             # Add series to xml
             self.xml.add_serie(header=ts_header, eventstr=eventstr)
@@ -548,7 +551,7 @@ if __name__ == "__main__":
     self2.write(output_path=Path(__file__).parents[1] / "tests_fewspy/data/bin_test_series4.xml")
 
 
-# %%
-import cProfile
+# # %%
+# import cProfile
 
-cProfile.run('XmlFile.from_xml_file("streefpeil_2023.xml")')
+# cProfile.run('XmlFile.from_xml_file("streefpeil_2023.xml")')
