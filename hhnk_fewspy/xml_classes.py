@@ -382,9 +382,8 @@ class XmlFile(hrt.File):
                 # Write header to dict
                 if subchild.tag.endswith("header"):  # gewoonlijk eerste subchild is de header
                     header = XmlHeader.from_pi_header_element(subchild)
-                # Get data
-                else:
-                    # TODO test if works on non binary?
+                # Else get data
+                else: 
                     data.append(subchild.values())
 
                 # If binary we assume equidistant series with equal length.
