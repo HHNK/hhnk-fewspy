@@ -383,7 +383,7 @@ class XmlFile(hrt.File):
                 if subchild.tag.endswith("header"):  # gewoonlijk eerste subchild is de header
                     header = XmlHeader.from_pi_header_element(subchild)
                 # Else get data
-                else: 
+                else:
                     data.append(subchild.values())
 
                 # If binary we assume equidistant series with equal length.
@@ -472,9 +472,22 @@ class XmlFile(hrt.File):
                 f.write(serie.to_str())
             f.write("</TimeSeries>")
 
-    def to_df(self):
-        """Get combined df of all timeseries in file"""
-        return pd.concat([v.df.rename(columns={"value": k}) for k, v in self.series.items()], axis=1)
+    def to_df(self, miss_val_to_nan=False):
+        """Get combined df of all timeseries in file
+
+        Parameters
+        ----------
+        replace_miss_val (bool)
+            replace missing value with np.nan
+        """
+        df_ts = pd.concat([v.df.rename(columns={"value": k}) for k, v in self.series.items()], axis=1)
+
+        if miss_val_to_nan:
+            miss_series = pd.Series([v.header.miss_val for k, v in self.series.items()])
+            miss_series.index = self.series.keys()
+            df_ts.replace(miss_series, np.nan, inplace=True)
+
+        return df_ts
 
 
 class DataFrameTimeseries:
