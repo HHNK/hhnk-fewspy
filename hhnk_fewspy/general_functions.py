@@ -2,7 +2,6 @@
 
 import glob
 import os
-from pathlib import Path
 
 import hhnk_research_tools as hrt
 
@@ -31,7 +30,7 @@ def clean_logs(log_dir, keepcount=24, lognames=["settings_", "log_"]):
     """Settings and logs are written to new file every time. Only keep x of them"""  # noqa: D401
 
     for logname in lognames:
-        for i in glob.glob(Path(str(log_dir)) / f"{logname}*")[:-keepcount]:
+        for i in glob.glob(os.path.join(str(log_dir), f"{logname}*"))[:-keepcount]:
             os.remove(i)
 
 
