@@ -1,4 +1,5 @@
 """General tools used by HHNK"""
+
 import glob
 import os
 
@@ -25,9 +26,9 @@ def log_arguments(log_file, arguments):
             f.write(f"{i}:  {arg}\n")
 
 
-def clean_logs(log_dir, keepcount=24):
+def clean_logs(log_dir, keepcount=24, lognames=["settings_", "log_"]):
     """Settings and logs are written to new file every time. Only keep x of them"""  # noqa: D401
-    for logname in ["settings_", "log_"]:
+    for logname in lognames:
         for i in glob.glob(str(log_dir.path / f"{logname}*"))[:-keepcount]:
             os.remove(i)
 
