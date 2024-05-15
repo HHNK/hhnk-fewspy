@@ -28,6 +28,7 @@ def log_arguments(log_file, arguments):
 
 def clean_logs(log_dir, keepcount=24, lognames=["settings_", "log_"]):
     """Settings and logs are written to new file every time. Only keep x of them"""  # noqa: D401
+
     for logname in lognames:
         for i in glob.glob(str(log_dir.path / f"{logname}*"))[:-keepcount]:
             os.remove(i)
