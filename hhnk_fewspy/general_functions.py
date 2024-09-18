@@ -2,8 +2,7 @@
 
 import glob
 import os
-
-import hhnk_research_tools as hrt
+from pathlib import Path
 
 
 def log_arguments(log_file, arguments):
@@ -17,7 +16,7 @@ def log_arguments(log_file, arguments):
         sys.argv arguments to log
     """
     # Create parent if it doenst exist
-    hrt.File(log_file).parent.create()
+    Path(str(log_file)).parent.mkdir(exist_ok=True)
 
     # Log args
     with open(str(log_file), "w") as f:
