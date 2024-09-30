@@ -21,21 +21,20 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     """JSON with scenarios based on supplied filters
     !! format for timeseries should be XML. For others JSON is preferred !!
     """
-    url = "{}{}/".format(FEWS_REST_URL, param)
+    url = f"{FEWS_REST_URL}{param}/"
 
     payload = {
         "documentFormat": documentFormat,
-        "documentVersion": "1.25",
+        # "documentVersion": "1.25",
+        "documentVersion": "1.34",
     }
 
     for key, value in kwargs.items():
-        if key == "locationIds":
-            #             pass #skip because hashtags are transformed into %23...
-            if isinstance(value, list):
-                value = (";").join(value)
-            url = f"{url}?locationIds={value}"
-        else:
-            payload[key] = value
+        # if key == "locationIds": #FIXME was dit ergens nodig?
+        #     #             pass #skip because hashtags are transformed into %23...
+        #     url = f"{url}?locationIds={value}"
+        # else:
+        payload[key] = value
     r = requests.get(url=url, params=payload)
     if debug:
         print(r.url)
@@ -80,6 +79,17 @@ def get_locations(col="locations"):
 
 
 def get_intervalstatistics(debug=False, **kwargs):
+    """
+    kwargs = {
+                "interval": "CALENDAR_MONTH",
+                "statistics": "% beschikbaar",
+                "filterId": "WinCC_HHNK_WEB",
+                "parameterIds": "WNS2369.h.pred",
+                "locationIds": ["ZRG-L-0519_kelder","ZRG-P-0500_kelder"],
+                "startTime": datetime.datetime(year=2023, month=3, day=20),
+                "endTime": datetime.datetime(year=2024, month=3, day=20),
+            }
+    """
     payload = {"documentFormat": "PI_JSON"}
     for key, value in kwargs.items():
         # set time in correct format.
@@ -100,3 +110,6 @@ def check_location_id(loc_id, df):
         suggested_loc = df[df["locationId"].str.contains(loc_id)]
         if suggested_loc.empty:
             print("LocationId {} not found. Requesting timeseries will result in an error.".format(loc_id))
+
+
+# %%
