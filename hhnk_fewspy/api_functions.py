@@ -18,8 +18,9 @@ class connect_API:
 
 
 def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kwargs):
-    """return json containing scenarios based on supplied filters
-    !! format for timeseries should be XML. For others JSON is preferred !!"""
+    """JSON with scenarios based on supplied filters
+    !! format for timeseries should be XML. For others JSON is preferred !!
+    """
     url = "{}{}/".format(FEWS_REST_URL, param)
 
     payload = {
@@ -30,6 +31,8 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     for key, value in kwargs.items():
         if key == "locationIds":
             #             pass #skip because hashtags are transformed into %23...
+            if isinstance(value, list):
+                value = (";").join(value)
             url = f"{url}?locationIds={value}"
         else:
             payload[key] = value
@@ -76,9 +79,23 @@ def get_locations(col="locations"):
     return pd.DataFrame(c).T
 
 
+def get_intervalstatistics(debug=False, **kwargs):
+    payload = {"documentFormat": "PI_JSON"}
+    for key, value in kwargs.items():
+        # set time in correct format.
+        if key in ["startTime", "endTime"]:
+            value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
+        payload[key] = value
+
+    r = call_FEWS_api(param="timeseries/intervalstatistics", debug=debug, **payload)
+
+    return r
+
+
 def check_location_id(loc_id, df):
     """Example use:
-    check_location_id(loc_id='MPN-AS-427')"""
+    check_location_id(loc_id='MPN-AS-427')
+    """
     if loc_id not in df["locationId"].values:
         suggested_loc = df[df["locationId"].str.contains(loc_id)]
         if suggested_loc.empty:

@@ -87,7 +87,7 @@ def xml_to_dict(xml_path, binary: bool = False):
                 data = bin_values[i * bin_size : i * bin_size + bin_size]
 
         columns = subchild.keys()
-        serie = XmlTimeSeries(metadata, data=data, columns=columns, binary=binary)
+        serie = XmlTimeSeries(header=metadata, data=data, columns=columns, binary=binary)
 
         if serie.locid not in series.keys():
             series[serie.locid] = {}
@@ -132,4 +132,8 @@ def print_xml(timeseries):
 if __name__ == "__main__":
     from tests_fewspy.config import FOLDER_DATA
 
-    xml_to_df(xml_path=FOLDER_DATA.bin_test_series.base, binary=True, parameter="")
+    xml_path = FOLDER_DATA.bin_test_series.base
+    binary = True
+    parameter = ""
+
+    xml_to_df(xml_path=xml_path, binary=binary, parameter=parameter)
