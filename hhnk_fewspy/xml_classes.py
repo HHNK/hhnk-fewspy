@@ -57,6 +57,7 @@ class XmlDate:
 
     @property
     def date_time(self) -> datetime.datetime:
+        # TODO date_time returns Timestamp not datetime.
         return datetime.datetime.fromisoformat(f"{self.date}T{self.time}")
 
     @property
@@ -488,6 +489,21 @@ class XmlFile(hrt.File):
             df_ts.replace(miss_series, np.nan, inplace=True)
 
         return df_ts
+
+    @property
+    def series__location_ids(self) -> list:
+        """List of unique location ids in the series"""
+        return list(set(self.series.apply(lambda x: x.header.location_id).tolist()))
+
+    @property
+    def series__start_date(self) -> datetime.datetime:
+        """Min start time in all series"""
+        return min(self.series.apply(lambda x: x.header.start_date.date_time).tolist()).to_pydatetime()
+
+    @property
+    def series__end_date(self) -> datetime.datetime:
+        """Max end time in all series"""
+        return max(self.series.apply(lambda x: x.header.end_date.date_time).tolist()).to_pydatetime()
 
 
 class DataFrameTimeseries:
