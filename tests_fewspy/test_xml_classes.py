@@ -29,7 +29,8 @@ def test_xml_file():
     """Test if we can read normal xml file"""
     xml_file = XmlFile.from_xml_file(r"data/normal_test_series.xml")
 
-    df = xml_file.to_df()
+    df = xml_file.to_df(add_flags=True)
+    assert "union_8020 AE2__H.meting__900second_flag" in df.columns
     assert int(df.sum().sum()) == -11
 
 

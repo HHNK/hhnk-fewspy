@@ -1,6 +1,5 @@
 # %%
 import datetime
-import inspect
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
@@ -153,10 +152,11 @@ class XmlHeader:
 {TAB*(indent+1)}<moduleInstanceId>{self.module_instance_id}</moduleInstanceId>
 {TAB*(indent+1)}<locationId>{self.location_id}</locationId>
 {TAB*(indent+1)}<parameterId>{self.parameter_id}</parameterId>"""
+
         if self.qualifier_ids is not None:
             if not isinstance(self.qualifier_ids, list):
                 raise TypeError("self.qualifier_ids should be of type list.")
-
+            # Qualifier can have multiple lines.
             return_str = "\n".join(
                 [
                     return_str,
@@ -167,20 +167,12 @@ class XmlHeader:
             )
 
         if self.time_step is not None:
-            return_str = "\n".join(
-                [
-                    return_str,
-                    f"""{TAB*(indent+1)}<timeStep unit="{self.time_step['unit']}" multiplier="{self.time_step['multiplier']}"/>""",
-                ]
-            )
+            return_str = f"""{return_str}
+{TAB*(indent+1)}<timeStep unit="{self.time_step['unit']}" multiplier="{self.time_step['multiplier']}"/>"""
 
-        return_str = "\n".join(
-            [
-                return_str,
-                f"""{TAB*(indent+1)}<missVal>{self.miss_val}</missVal>
-{TAB*indent}</header>""",
-            ]
-        )
+        return_str = f"""{return_str}
+{TAB*(indent+1)}<missVal>{self.miss_val}</missVal>
+{TAB*indent}</header>"""
         return return_str
 
     def __repr__(self):
@@ -327,8 +319,18 @@ value="{"{}"}"/>\n'
                 df.drop([0, 1], axis=1, inplace=True)
                 df.rename({2: "value"}, axis=1, inplace=True)
                 df["value"] = df["value"].astype(float)
+
+                if 3 in df.columns:
+                    df.rename({3: "flag"}, axis=1, inplace=True)
+                    df["flag"] = df["flag"].astype(int)
             self._df = df
         return self._df
+
+    @property
+    def has_flag(self) -> bool:
+        if "flag" in df.columns:
+            return True
+        return False
 
     @df.setter
     def df(self, df):
@@ -473,7 +475,7 @@ class XmlFile(hrt.File):
                 f.write(serie.to_str())
             f.write("</TimeSeries>")
 
-    def to_df(self, miss_val_to_nan=False):
+    def to_df(self, miss_val_to_nan=False, add_flags=False):
         """Get combined df of all timeseries in file
 
         Parameters
@@ -481,7 +483,12 @@ class XmlFile(hrt.File):
         replace_miss_val (bool)
             replace missing value with np.nan
         """
-        df_ts = pd.concat([v.df.rename(columns={"value": k}) for k, v in self.series.items()], axis=1)
+        if add_flags:
+            df_ts = pd.concat(
+                [v.df.rename(columns={"value": k, "flag": f"{k}_flag"}) for k, v in self.series.items()], axis=1
+            )
+        else:
+            df_ts = pd.concat([v.df[["value"]].rename(columns={"value": k}) for k, v in self.series.items()], axis=1)
 
         if miss_val_to_nan:
             miss_series = pd.Series([v.header.miss_val for k, v in self.series.items()])

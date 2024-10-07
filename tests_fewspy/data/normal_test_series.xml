@@ -13,11 +13,11 @@
             <timeStep unit="second" multiplier="900" />
             <missVal>-999.0</missVal>
         </header>
-        <event date="2021-06-22" time="06:00:00" value="-1.1059999465942383" , flag= 0 />
-        <event date="2021-06-22" time="06:15:00" value="-1.1009999513626099" , flag= 0 />
-        <event date="2021-06-22" time="06:30:00" value="-1.0959999561309814" , flag= 0 />
-        <event date="2021-06-22" time="06:45:00" value="-1.0889999866485596" , flag= 0 />
-        <event date="2021-06-22" time="07:00:00" value="-1.0859999656677246" , flag= 0 />
+        <event date="2021-06-22" time="06:00:00" value="-1.1059999465942383" flag="0" />
+        <event date="2021-06-22" time="06:15:00" value="-1.1009999513626099" flag="0" />
+        <event date="2021-06-22" time="06:30:00" value="-1.0959999561309814" flag="0" />
+        <event date="2021-06-22" time="06:45:00" value="-1.0889999866485596" flag="0" />
+        <event date="2021-06-22" time="07:00:00" value="-1.0859999656677246" flag="0" />
     </series>
     <series>
         <header>
