@@ -1,19 +1,21 @@
 # %%
 import json
-
+import os
 import hkvfewspy
 import pandas as pd
 import requests
 from hkvfewspy.utils.pi_helper import read_timeseries_response
 
-FEWS_REST_URL = "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/"
+#TODO make this setting mutable
+FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/")
 
+#FEWS_REST_URL = "http://localhost:8080/FewsWebServices/rest/fewspiservice/v1/"
 
 class connect_API:
     @staticmethod
     def connect_rest():
         pi = hkvfewspy.PiRest(verify=False)
-        pi.setUrl(FEWS_REST_URL)
+        pi.setUrl(os.environ['FEWS_REST_URL'])
         return pi
 
 
@@ -21,7 +23,7 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     """JSON with scenarios based on supplied filters
     !! format for timeseries should be XML. For others JSON is preferred !!
     """
-    url = f"{FEWS_REST_URL}{param}/"
+    url = f"{os.environ['FEWS_REST_URL']}{param}/"
 
     payload = {
         "documentFormat": documentFormat,

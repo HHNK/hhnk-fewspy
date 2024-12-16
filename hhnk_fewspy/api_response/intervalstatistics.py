@@ -37,8 +37,7 @@ def statistics_to_df(r_json) -> pd.DataFrame:
     rows = []
     for res in r_json["timeSeriesIntervalStatistics"]:
         istats = res["intervalstatistics"]
-
-        row_loc = {"locationId": res["header"]["locationId"]}
+        row_loc = res["header"]
 
         for istat in istats:  # bijv '% beschikbaar'
             statistic = istat["statistic"]
@@ -62,7 +61,11 @@ def statistics_to_df(r_json) -> pd.DataFrame:
                         enddate = datetime.datetime.now() - datetime.timedelta(days=1, hours=2)
                         enddate = datetime.datetime.strftime(enddate, "%Y-%m-%d %H:%M:%S")
 
-                    row[statistic] = float(va[month_year])
+                    ##row[statistic] = float(va[month_year])
+                    try:
+                        row[statistic] = float(va[month_year])
+                    except ValueError:
+                        row[statistic] = 0
                     row["start_date"] = startdate
                     row["end_date"] = enddate
                     rows.append(row)
