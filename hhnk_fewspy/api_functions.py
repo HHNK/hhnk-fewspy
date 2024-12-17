@@ -1,10 +1,8 @@
 # %%
 import json
-import os
-import hkvfewspy
 import pandas as pd
+import os
 import requests
-from hkvfewspy.utils.pi_helper import read_timeseries_response
 
 #TODO make this setting mutable
 FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/")
@@ -14,6 +12,8 @@ FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices
 class connect_API:
     @staticmethod
     def connect_rest():
+        import hkvfewspy
+
         pi = hkvfewspy.PiRest(verify=False)
         pi.setUrl(os.environ['FEWS_REST_URL'])
         return pi
@@ -51,6 +51,8 @@ def get_timeseries(tz="Europe/Amsterdam", debug=False, **kwargs):
 
     get_timeseries(parameterIds='Stuw.stand.meting', locationIds=KST-JL-2571, startTime=T0, endTime=Tend, convertDatum=True)
     """
+    from hkvfewspy.utils.pi_helper import read_timeseries_response
+
     payload = {"documentFormat": "PI_XML"}
     for key, value in kwargs.items():
         # set time in correct format.
