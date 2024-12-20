@@ -1,13 +1,16 @@
 # %%
 import json
-import pandas as pd
 import os
+
+import pandas as pd
 import requests
 
-#TODO make this setting mutable
-FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/")
+# TODO make this setting mutable
+# FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/")
 
-#FEWS_REST_URL = "http://localhost:8080/FewsWebServices/rest/fewspiservice/v1/"
+FEWS_REST_URL = "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/"
+# FEWS_REST_URL = "http://localhost:8080/FewsWebServices/rest/fewspiservice/v1/"
+
 
 class connect_API:
     @staticmethod
@@ -15,7 +18,7 @@ class connect_API:
         import hkvfewspy
 
         pi = hkvfewspy.PiRest(verify=False)
-        pi.setUrl(os.environ['FEWS_REST_URL'])
+        pi.setUrl(FEWS_REST_URL)
         return pi
 
 
@@ -23,7 +26,7 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     """JSON with scenarios based on supplied filters
     !! format for timeseries should be XML. For others JSON is preferred !!
     """
-    url = f"{os.environ['FEWS_REST_URL']}{param}/"
+    url = f"{FEWS_REST_URL}{param}/"
 
     payload = {
         "documentFormat": documentFormat,
@@ -44,8 +47,31 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     return r
 
 
-def get_timeseries(tz="Europe/Amsterdam", debug=False, **kwargs):
-    """Example use:
+def get_table_as_df(table_name: str) -> pd.DataFrame:
+    """
+    Get table as dataframe from API.
+    Apply endpoint mapper to get the table.
+    """
+
+    endpoint_mapper = {
+        "parameters": "timeSeriesParameters",
+        "locations": "locations",
+    }
+
+    r = call_FEWS_api(param=table_name, documentFormat="PI_JSON")
+    try:
+        df = pd.DataFrame(r.json()[endpoint_mapper[table_name]])
+    except KeyError as e:
+        print(f"Available keys: {r.json().keys()}")
+        raise e
+
+    return df
+
+
+def get_timeseries(tz="Europe/Amsterdam", debug=False, **kwargs) -> pd.DataFrame:
+    """Get timeseries from FEWS API
+
+    Example use:
     Tend=datetime.datetime.now()
     T0=Tend - datetime.timedelta(days=1)
 
@@ -74,12 +100,8 @@ def get_location_headers():
 
 def get_locations(col="locations"):
     r = call_FEWS_api(param="locations", documentFormat="PI_JSON")
-
-    r.encoding = "UTF-8"
-    a = json.loads(r.text)
-    b = pd.DataFrame(a)
-    c = b[col].to_dict()
-    return pd.DataFrame(c).T
+    df = pd.DataFrame(r.json()["locations"])
+    return df
 
 
 def get_intervalstatistics(debug=False, **kwargs):
