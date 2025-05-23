@@ -1,17 +1,22 @@
 # %%
 import json
+import os
 
-import hkvfewspy
 import pandas as pd
 import requests
-from hkvfewspy.utils.pi_helper import read_timeseries_response
+
+# TODO make this setting mutable
+# FEWS_REST_URL = os.getenv('FEWS_REST_URL', "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/")
 
 FEWS_REST_URL = "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/"
+# FEWS_REST_URL = "http://localhost:8080/FewsWebServices/rest/fewspiservice/v1/"
 
 
 class connect_API:
     @staticmethod
     def connect_rest():
+        import hkvfewspy
+
         pi = hkvfewspy.PiRest(verify=False)
         pi.setUrl(FEWS_REST_URL)
         return pi
@@ -42,13 +47,38 @@ def call_FEWS_api(param="locations", documentFormat="PI_JSON", debug=False, **kw
     return r
 
 
-def get_timeseries(tz="Europe/Amsterdam", debug=False, **kwargs):
-    """Example use:
+def get_table_as_df(table_name: str) -> pd.DataFrame:
+    """
+    Get table as dataframe from API.
+    Apply endpoint mapper to get the table.
+    """
+
+    endpoint_mapper = {
+        "parameters": "timeSeriesParameters",
+        "locations": "locations",
+    }
+
+    r = call_FEWS_api(param=table_name, documentFormat="PI_JSON")
+    try:
+        df = pd.DataFrame(r.json()[endpoint_mapper[table_name]])
+    except KeyError as e:
+        print(f"Available keys: {r.json().keys()}")
+        raise e
+
+    return df
+
+
+def get_timeseries(tz="Europe/Amsterdam", debug=False, **kwargs) -> pd.DataFrame:
+    """Get timeseries from FEWS API
+
+    Example use:
     Tend=datetime.datetime.now()
     T0=Tend - datetime.timedelta(days=1)
 
     get_timeseries(parameterIds='Stuw.stand.meting', locationIds=KST-JL-2571, startTime=T0, endTime=Tend, convertDatum=True)
     """
+    from hkvfewspy.utils.pi_helper import read_timeseries_response
+
     payload = {"documentFormat": "PI_XML"}
     for key, value in kwargs.items():
         # set time in correct format.
@@ -70,12 +100,8 @@ def get_location_headers():
 
 def get_locations(col="locations"):
     r = call_FEWS_api(param="locations", documentFormat="PI_JSON")
-
-    r.encoding = "UTF-8"
-    a = json.loads(r.text)
-    b = pd.DataFrame(a)
-    c = b[col].to_dict()
-    return pd.DataFrame(c).T
+    df = pd.DataFrame(r.json()["locations"])
+    return df
 
 
 def get_intervalstatistics(debug=False, **kwargs):
