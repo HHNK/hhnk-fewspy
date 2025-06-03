@@ -9,4 +9,5 @@ prune **\.ipynb_checkpoints
 prune **\.mypy_cache
 prune .pytest_cache
 prune .pixi
+print tests_fewspy
 prune deprecated
