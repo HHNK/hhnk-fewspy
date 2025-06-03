@@ -33,6 +33,6 @@ def clean_logs(log_dir, keepcount=24, lognames=["settings_", "log_"]):
             os.remove(i)
 
 
-def replace_datashare(d):
+def replace_datashare(d) -> Path:
     """Sawis user has problems with datashare. Replacing with d$ helps."""
-    return d.replace("Datashare", "d$")
+    return Path(d.replace("Datashare", "d$"))
