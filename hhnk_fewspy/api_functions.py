@@ -105,7 +105,7 @@ def get_locations(col="locations"):
 
 
 def get_intervalstatistics(debug=False, **kwargs):
-    """
+    """Kwarg example:
     kwargs = {
                 "interval": "CALENDAR_MONTH",
                 "statistics": "% beschikbaar",
@@ -129,7 +129,7 @@ def get_intervalstatistics(debug=False, **kwargs):
 
 
 def check_location_id(loc_id, df):
-    """Example use:
+    """Use example:
     check_location_id(loc_id='MPN-AS-427')
     """
     if loc_id not in df["locationId"].values:
