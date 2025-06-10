@@ -1,5 +1,6 @@
 # %%
 import os
+import warnings
 from pathlib import Path
 
 # https://github.com/geopandas/geopandas/issues/1166
@@ -11,7 +12,9 @@ def update_hkvfewspy():
     import importlib
     import shutil
 
-    import hkvfewspy
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SyntaxWarning)
+        import hkvfewspy
 
     src = os.path.join(os.path.dirname(__file__), r"hkvfewspy/pi_helper.py")
     dst = os.path.join(Path(hkvfewspy.__file__).parent, "utils", "pi_helper.py")

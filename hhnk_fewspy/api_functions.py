@@ -1,6 +1,7 @@
 # %%
 import json
 import os
+import warnings
 
 import pandas as pd
 import requests
@@ -15,7 +16,9 @@ FEWS_REST_URL = "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/"
 class connect_API:
     @staticmethod
     def connect_rest():
-        import hkvfewspy
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=SyntaxWarning)
+            import hkvfewspy
 
         pi = hkvfewspy.PiRest(verify=False)
         pi.setUrl(FEWS_REST_URL)

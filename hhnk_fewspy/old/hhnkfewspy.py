@@ -1,9 +1,9 @@
 import datetime
 import inspect
 import json
+import warnings
 from pathlib import Path
 
-import hkvfewspy
 import numpy as np
 import pandas as pd
 import requests
@@ -11,6 +11,9 @@ from lxml import objectify
 
 import hhnk_fewspy.old.pixml
 
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=SyntaxWarning)
+    import hkvfewspy
 FEWS_REST_URL = "https://fews.hhnk.nl/FewsWebServices/rest/fewspiservice/v1/"
 FEWS_SOAP_URL = "https://fews.hhnk.nl/FewsWebServices/fewspiservice?wsdl"
 PAYLOAD = {"documentFormat": "PI_JSON", "documentVersion": "1.25"}
