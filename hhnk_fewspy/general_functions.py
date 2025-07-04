@@ -21,7 +21,7 @@ def log_arguments(log_file, arguments):
 
     # Log args
     with open(str(log_file), "w") as f:
-        f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H%M%S')} | Arguments:\n")
+        f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Arguments:\n")
         for i, arg in enumerate(arguments):
             f.write(f"{i}:  {arg}\n")
 
