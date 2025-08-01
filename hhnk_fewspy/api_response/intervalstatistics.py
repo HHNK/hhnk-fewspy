@@ -65,7 +65,11 @@ def statistics_to_df(r_json: dict) -> pd.DataFrame:
                     enddate = f"{year}-{(month_num % 12) + 1:02d}-01 00:00:00"
                     now = datetime.datetime.now()
                     if datetime.datetime.strptime(enddate, "%Y-%m-%d %H:%M:%S") > now:
-                        enddate = now.strftime("%Y-%m-%d %H:%M:%S")
+                        # FIXME this causes issues around the first of the month because endtime will be before starttime.
+                        enddate = datetime.datetime.now() - datetime.timedelta(days=1, hours=2)
+                        enddate = datetime.datetime.strftime(enddate, "%Y-%m-%d %H:%M:%S")
+                        # FIXME this would be the fix, but the RVWapi doesnt like that.
+                        # enddate = now.strftime("%Y-%m-%d %H:%M:%S")
 
                     ##row[statistic] = float(va[month_year])
                     try:
