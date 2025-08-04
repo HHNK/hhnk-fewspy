@@ -2,9 +2,9 @@
 import datetime
 
 import pandas as pd
+from config import FOLDER_DATA
 
 from hhnk_fewspy import api_functions, connect_API
-from tests_fewspy.config import FOLDER_DATA
 
 
 # %%
@@ -18,12 +18,14 @@ def test_get_parameters():
 def test_runTask_through_API():
     """TODO deze faalt, mag niet via API starten."""
     pi = connect_API.connect_rest()
-    pi.runTask(
+    api_response = pi.runTask(
         workflowId="Import_TMX_from_file",
         startTime=datetime.datetime.now(),
         endTime=datetime.datetime.now(),
-        userId="Gerwen, Wietse van",
+        userId="",
     )
+
+    assert api_response == {"id": "Readonly mode is enabled. Access is not allowed."}
 
 
 if __name__ == "__main__":
