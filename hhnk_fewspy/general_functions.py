@@ -37,11 +37,3 @@ def clean_logs(log_dir, keepcount=24, lognames=["settings_", "log_"]):
 def replace_datashare(d) -> Path:
     """Sawis user has problems with datashare. Replacing with d$ helps."""
     return Path(d.replace("Datashare", "d$"))
-
-
-def env_str_to_bool(env_val: str) -> bool:
-    """Convert os.environ['True'] to True bool and all other to False.
-    True options in .env are:
-    ('1', 'true', 'yes', 'on')
-    """
-    return env_val.lower() in ("1", "true", "yes", "on")
