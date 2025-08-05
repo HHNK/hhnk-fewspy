@@ -1,1 +1,1 @@
-call python -m pip install --user --no-deps -e ..
+call python -m pip install --no-deps -e ..

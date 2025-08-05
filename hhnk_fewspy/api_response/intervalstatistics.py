@@ -22,17 +22,24 @@ MONTH_MAP = {
 }
 
 
-def statistics_to_df(r_json) -> pd.DataFrame:
-    """Only tested for interval=CALENDAR_MONTH.
+def statistics_to_df(r_json: dict) -> pd.DataFrame:
+    """Transform the statistics json response from the API into a dataframe.
+    Only tested for interval=CALENDAR_MONTH.
 
     Parameters
     ----------
-    r_json : json
+    r_json : dict
         r.json() response from API
 
-    Returns pd.DataFrame
+    Example
     -------
-    containing location IDs, statsitic column and start- end_date
+    >>> r = hhnk_fewspy.get_intervalstatistics(**kwargs)
+    >>> statistics_to_df(r_json=r.json())
+
+    Returns
+    -------
+    df : pd.DataFrame
+        dataframe containing location IDs, statsitic column and start- end_date
     """
     rows = []
     for res in r_json["timeSeriesIntervalStatistics"]:
@@ -58,8 +65,11 @@ def statistics_to_df(r_json) -> pd.DataFrame:
                     enddate = f"{year}-{(month_num % 12) + 1:02d}-01 00:00:00"
                     now = datetime.datetime.now()
                     if datetime.datetime.strptime(enddate, "%Y-%m-%d %H:%M:%S") > now:
+                        # FIXME this causes issues around the first of the month because endtime will be before starttime.
                         enddate = datetime.datetime.now() - datetime.timedelta(days=1, hours=2)
                         enddate = datetime.datetime.strftime(enddate, "%Y-%m-%d %H:%M:%S")
+                        # FIXME this would be the fix, but the RVWapi doesnt like that.
+                        # enddate = now.strftime("%Y-%m-%d %H:%M:%S")
 
                     ##row[statistic] = float(va[month_year])
                     try:
@@ -87,3 +97,4 @@ if __name__ == "__main__":
     }
 
     r = get_intervalstatistics(**kwargs)
+    r_json = r.json()
