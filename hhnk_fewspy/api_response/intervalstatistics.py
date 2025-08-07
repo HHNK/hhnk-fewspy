@@ -22,14 +22,14 @@ MONTH_MAP = {
 }
 
 
-def statistics_to_df(r_json: dict) -> pd.DataFrame:
+def statistics_to_df(intervalstats_json: dict) -> pd.DataFrame:
     """Transform the statistics json response from the API into a dataframe.
     Only tested for interval=CALENDAR_MONTH.
 
     Parameters
     ----------
-    r_json : dict
-        r.json() response from API
+    intervalstats_json : dict
+        intervalstats_resonse.json() response from calling FEWS API (using hhnk_fewspy.get_intervalstatistics)
 
     Example
     -------
@@ -39,10 +39,10 @@ def statistics_to_df(r_json: dict) -> pd.DataFrame:
     Returns
     -------
     df : pd.DataFrame
-        dataframe containing location IDs, statsitic column and start- end_date
+        dataframe containing location IDs, statsitic column and start- end_date (in UTC timezone)
     """
     rows = []
-    for res in r_json["timeSeriesIntervalStatistics"]:
+    for res in intervalstats_json["timeSeriesIntervalStatistics"]:
         istats = res["intervalstatistics"]
         row_loc = res["header"]
 
@@ -59,17 +59,20 @@ def statistics_to_df(r_json: dict) -> pd.DataFrame:
 
                     month_num = MONTH_MAP[month]
                     startdate = f"{year}-{month_num:02d}-01 00:00:00"
-                    # Adjust the enddate to be in 2025 if the month is Decembermonth_num == 12:
+                    # Adjust the enddate to be in the next year if the month is December
                     if month_num == 12:
                         year = int(year) + 1
                     enddate = f"{year}-{(month_num % 12) + 1:02d}-01 00:00:00"
-                    now = datetime.datetime.now()
-                    if datetime.datetime.strptime(enddate, "%Y-%m-%d %H:%M:%S") > now:
-                        # FIXME this causes issues around the first of the month because endtime will be before starttime.
-                        enddate = datetime.datetime.now() - datetime.timedelta(days=1, hours=2)
-                        enddate = datetime.datetime.strftime(enddate, "%Y-%m-%d %H:%M:%S")
-                        # FIXME this would be the fix, but the RVWapi doesnt like that.
-                        # enddate = now.strftime("%Y-%m-%d %H:%M:%S")
+
+                    # For monthly statistics the enddate is always the end of the month. This means the enddate
+                    # can be in the future. That's not correct for historical timeseries as no timeseries are expected.
+                    # Therefore the enddate can be maximum the time now.
+                    now = datetime.datetime.now(tz=datetime.timezone.utc)
+                    if (
+                        datetime.datetime.strptime(enddate, "%Y-%m-%d %H:%M:%S").replace(tzinfo=datetime.timezone.utc)
+                        > now
+                    ):
+                        enddate = now.strftime("%Y-%m-%d %H:%M:%S")
 
                     ##row[statistic] = float(va[month_year])
                     try:
