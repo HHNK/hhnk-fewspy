@@ -74,7 +74,6 @@ def statistics_to_df(intervalstats_json: dict) -> pd.DataFrame:
                     ):
                         enddate = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                    ##row[statistic] = float(va[month_year])
                     try:
                         row[statistic] = float(va[month_year])
                     except ValueError:
