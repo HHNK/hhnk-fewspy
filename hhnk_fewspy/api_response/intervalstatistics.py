@@ -46,7 +46,7 @@ def statistics_to_df(intervalstats_json: dict) -> pd.DataFrame:
         istats = res["intervalstatistics"]
         row_loc = res["header"]
 
-        for istat in istats:  # bijv '% beschikbaar'
+        for istat in istats:  # bijv 'percentage_available'
             statistic = istat["statistic"]
             vals = istat["values"]
 
@@ -90,7 +90,7 @@ def statistics_to_df(intervalstats_json: dict) -> pd.DataFrame:
 if __name__ == "__main__":
     kwargs = {
         "interval": "CALENDAR_MONTH",
-        "statistics": "% beschikbaar",
+        "statistics": "percentage_available",
         "filterId": "WinCC_HHNK_WEB",
         "parameterIds": "WNS2369.h.pred",
         "locationIds": ["ZRG-L-0519_kelder", "ZRG-P-0500_kelder"],

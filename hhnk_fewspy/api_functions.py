@@ -111,7 +111,7 @@ def get_intervalstatistics(debug=False, **kwargs):
     """Kwarg example:
     kwargs = {
                 "interval": "CALENDAR_MONTH",
-                "statistics": "% beschikbaar",
+                "statistics": "percentage_available",
                 "filterId": "WinCC_HHNK_WEB",
                 "parameterIds": "WNS2369.h.pred",
                 "locationIds": ["ZRG-L-0519_kelder","ZRG-P-0500_kelder"],
